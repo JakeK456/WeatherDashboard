@@ -113,3 +113,10 @@ function createForecastCard(forecastIndex){
 
     return card;
 }
+
+var searchButtonEl = $("#search-button");
+var searchInputEl = $("#search-input");
+
+searchButtonEl.on('click', function(event){
+    console.log(searchInputEl.val());
+});
