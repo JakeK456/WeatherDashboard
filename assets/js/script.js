@@ -1,12 +1,73 @@
 var weatherBaseUrl = "https://api.openweathermap.org/data/2.5/onecall?&exclude=minutely,hourly,alerts&units=imperial&appid=423f62f077e216c8f64b4992f27ead8c"
 var geoCodeBaseUrl = "http://api.openweathermap.org/geo/1.0/direct?&appid=423f62f077e216c8f64b4992f27ead8c"
 
-
 var searchButtonEl = $("#search-button");
 var searchInputEl = $("#search-input");
+var searchHistoryContainerEl = $("#search-history");
+
+var searchHistory = {
+    maxIndexes: 7,
+    history: [],
+
+    getHistory(){
+        var retval = JSON.parse(localStorage.getItem("history"));
+        if (retval === null){
+            this.history = [];
+        }
+        else{
+            this.history = retval;
+        }
+        return this.history;
+    },
+
+    addToHistory(city){
+        this.getHistory();
+
+        if (this.history.includes(city)) return;
+
+        if (this.history.length > this.maxIndexes) this.history.pop();
+
+        this.history.unshift(city);
+        localStorage.setItem("history", JSON.stringify(this.history));
+    }
+}
+
+var weatherSummary = {
+    city: null,
+    lat: null,
+    lon: null,
+    current: null,
+    forecast: []
+}
+
+function weatherMoment(unixTime, tempF, windSpeedMPH, humidity, uvi, icon){
+    this.unixTime = unixTime;
+    this.tempF = tempF;
+    this.windSpeedMPH = windSpeedMPH;
+    this.humidity = humidity;
+    this.uvi = uvi;
+    this.icon = icon;
+}
+
+
+
+
+
+
+
+
+renderSearchHistory();
 
 searchButtonEl.on('click', function(event){
     geoCodeApi(searchInputEl.val());
+});
+
+searchHistoryContainerEl.on('click', function(event){
+    var target = event.target;
+
+    if (target.tagName === "BUTTON"){
+        geoCodeApi(target.textContent);
+    }
 });
 
 function geoCodeApi(city){
@@ -20,6 +81,8 @@ function geoCodeApi(city){
         })
         .then(function (data) {
             weatherSummary.city = data[0].name;
+            searchHistory.addToHistory(weatherSummary.city);
+            renderSearchHistory();
             getWeatherApi(data[0].lat, data[0].lon);
         });
 }
@@ -125,22 +188,19 @@ function createForecastCard(forecastIndex){
     return card;
 }
 
-var weatherSummary = {
-    city: null,
-    lat: null,
-    lon: null,
-    current: null,
-    forecast: []
+function renderSearchHistory(){
+    searchHistory.getHistory();
+    searchHistoryContainerEl.empty();
+
+    for (var i = 0; i < searchHistory.history.length; i++){
+        var historyButton = $('<button>');
+        historyButton.addClass("list-group-item list-group-item-action");
+        historyButton.text(searchHistory.history[i]);
+        searchHistoryContainerEl.append(historyButton);
+    }
 }
 
-function weatherMoment(unixTime, tempF, windSpeedMPH, humidity, uvi, icon){
-    this.unixTime = unixTime;
-    this.tempF = tempF;
-    this.windSpeedMPH = windSpeedMPH;
-    this.humidity = humidity;
-    this.uvi = uvi;
-    this.icon = icon;
-}
+
 
 function getIconUrl(iconCode){
     return "http://openweathermap.org/img/wn/" + iconCode + "@2x.png";
