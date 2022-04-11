@@ -1,9 +1,31 @@
-var baseUrl = "https://api.openweathermap.org/data/2.5/onecall?&exclude=minutely,hourly,alerts&units=imperial&appid=423f62f077e216c8f64b4992f27ead8c"
+var weatherBaseUrl = "https://api.openweathermap.org/data/2.5/onecall?&exclude=minutely,hourly,alerts&units=imperial&appid=423f62f077e216c8f64b4992f27ead8c"
+var geoCodeBaseUrl = "http://api.openweathermap.org/geo/1.0/direct?&appid=423f62f077e216c8f64b4992f27ead8c"
 
-getWeatherApi(33.11583659524207, -117.32090558575199);
+
+var searchButtonEl = $("#search-button");
+var searchInputEl = $("#search-input");
+
+searchButtonEl.on('click', function(event){
+    geoCodeApi(searchInputEl.val());
+});
+
+function geoCodeApi(city){
+    var requestUrl = geoCodeBaseUrl + "&q=" + city;
+    fetch(requestUrl)
+        .then(function (response) {
+            if (response.status !== 200){
+                console.log("Check Response Status!");
+            }
+        return response.json();
+        })
+        .then(function (data) {
+            weatherSummary.city = data[0].name;
+            getWeatherApi(data[0].lat, data[0].lon);
+        });
+}
 
 function getWeatherApi(lat, lon) {
-    var requestUrl = baseUrl + "&lat=" + lat + "&lon=" + lon
+    var requestUrl = weatherBaseUrl + "&lat=" + lat + "&lon=" + lon
     fetch(requestUrl)
         .then(function (response) {
             if (response.status !== 200){
@@ -26,6 +48,7 @@ function grabRelevantData(data){
 
     weatherSummary.current = new weatherMoment(current.dt, current.temp, current.wind_speed, current.humidity, current.uvi, current.weather[0].icon);
     
+    weatherSummary.forecast = [];
     for (var i = 1; i < 6; i++){
         var day = data.daily[i];
         weatherSummary.forecast.push(new weatherMoment(day.dt, day.temp.day, day.wind_speed, day.humidity, day.uvi, day.weather[0].icon));
@@ -48,8 +71,8 @@ function renderCurrentWeather(currentSummary){
     var humiditySpanEl = $($(containerEl.children()[3]).children()[0]);
     var uviSpanEl = $($(containerEl.children()[4]).children()[0]);
 
-    headerEl.text("San Diego (4/10/2022) ");
-    iconEl.text(currentSummary.icon);
+    headerEl.text(weatherSummary.city + " " +  moment.unix(currentSummary.unixTime).format("M/DD/YYYY"));
+    iconEl.css("content", 'url(' + getIconUrl(currentSummary.icon) + ')');
     tempSpanEl.text(currentSummary.tempF + " " + String.fromCharCode(176) + "F");
     windSpanEl.text(currentSummary.windSpeedMPH + " MPH");
     humiditySpanEl.text(currentSummary.humidity + "%");
@@ -61,28 +84,15 @@ function renderCurrentWeather(currentSummary){
 function renderForecastWeather(forecastSummary){
     var forecastEl = $("#forecast-weather");
     var forecastCardContainerEl = $(forecastEl.children()[1]);
+    
+    forecastCardContainerEl.empty();
+
+    console.log(forecastSummary);
 
     for (var i = 0; i < forecastSummary.length; i++){
-        card = createForecastCard(forecastSummary[i]);
+        var card = new createForecastCard(forecastSummary[i]);
         forecastCardContainerEl.append(card);
     }
-}
-
-
-var weatherSummary = {
-    lat: null,
-    lon: null,
-    current: null,
-    forecast: []
-}
-
-function weatherMoment(unixTime, tempF, windSpeedMPH, humidity, uvi, icon){
-    this.unixTime = unixTime;
-    this.tempF = tempF;
-    this.windSpeedMPH = windSpeedMPH;
-    this.humidity = humidity;
-    this.uvi = uvi;
-    this.icon = icon;
 }
 
 function createForecastCard(forecastIndex){
@@ -94,7 +104,8 @@ function createForecastCard(forecastIndex){
     cardBody.append(cardTitle);
 
     var iconEl = $('<i>');
-    iconEl.text(forecastIndex.icon)
+    console.log(getIconUrl(forecastIndex.icon));
+    iconEl.css("content", 'url(' + getIconUrl(forecastIndex.icon) + ')');
     cardBody.append(iconEl);
 
     var tempEl = $('<p>').addClass('card-text');
@@ -114,9 +125,23 @@ function createForecastCard(forecastIndex){
     return card;
 }
 
-var searchButtonEl = $("#search-button");
-var searchInputEl = $("#search-input");
+var weatherSummary = {
+    city: null,
+    lat: null,
+    lon: null,
+    current: null,
+    forecast: []
+}
 
-searchButtonEl.on('click', function(event){
-    console.log(searchInputEl.val());
-});
+function weatherMoment(unixTime, tempF, windSpeedMPH, humidity, uvi, icon){
+    this.unixTime = unixTime;
+    this.tempF = tempF;
+    this.windSpeedMPH = windSpeedMPH;
+    this.humidity = humidity;
+    this.uvi = uvi;
+    this.icon = icon;
+}
+
+function getIconUrl(iconCode){
+    return "http://openweathermap.org/img/wn/" + iconCode + "@2x.png";
+}
