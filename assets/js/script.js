@@ -59,9 +59,14 @@ function renderCurrentWeather(currentSummary){
 }
 
 function renderForecastWeather(forecastSummary){
+    var forecastEl = $("#forecast-weather");
+    var forecastCardContainerEl = $(forecastEl.children()[1]);
 
+    for (var i = 0; i < forecastSummary.length; i++){
+        card = createForecastCard(forecastSummary[i]);
+        forecastCardContainerEl.append(card);
+    }
 }
-
 
 
 var weatherSummary = {
@@ -78,4 +83,33 @@ function weatherMoment(unixTime, tempF, windSpeedMPH, humidity, uvi, icon){
     this.humidity = humidity;
     this.uvi = uvi;
     this.icon = icon;
+}
+
+function createForecastCard(forecastIndex){
+    var card = $('<div>').addClass('col card m-2');
+    var cardBody = $('<div>').addClass('card-body');
+
+    var cardTitle = $('<h5>').addClass('card-title');
+    cardTitle.text(moment.unix(forecastIndex.unixTime).format("M/DD/YYYY"));
+    cardBody.append(cardTitle);
+
+    var iconEl = $('<i>');
+    iconEl.text(forecastIndex.icon)
+    cardBody.append(iconEl);
+
+    var tempEl = $('<p>').addClass('card-text');
+    tempEl.text("Temp: " + forecastIndex.tempF + " " + String.fromCharCode(176) + "F");
+    cardBody.append(tempEl);
+
+    var windEl = $('<p>').addClass('card-text');
+    windEl.text("Wind: " + forecastIndex.windSpeedMPH + " MPH");
+    cardBody.append(windEl);
+
+    var humidityEl = $('<p>').addClass('card-text');
+    humidityEl.text("Humidity: " + forecastIndex.humidity + " %");
+    cardBody.append(humidityEl);
+    
+    card.append(cardBody);
+
+    return card;
 }
