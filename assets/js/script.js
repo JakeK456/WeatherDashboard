@@ -5,6 +5,7 @@ var searchButtonEl = $("#search-button");
 var searchInputEl = $("#search-input");
 var searchHistoryContainerEl = $("#search-history");
 
+// object to store history. reads and writes local storage
 var searchHistory = {
     maxIndexes: 7,
     history: [],
@@ -33,6 +34,7 @@ var searchHistory = {
     }
 }
 
+// holds all relevant weather data per location
 var weatherSummary = {
     city: null,
     lat: null,
@@ -41,6 +43,7 @@ var weatherSummary = {
     forecast: []
 }
 
+// holds weather data per location and time
 function weatherMoment(unixTime, tempF, windSpeedMPH, humidity, uvi, icon){
     this.unixTime = unixTime;
     this.tempF = tempF;
@@ -50,13 +53,19 @@ function weatherMoment(unixTime, tempF, windSpeedMPH, humidity, uvi, icon){
     this.icon = icon;
 }
 
+// grabs history from local storage and renders
 renderSearchHistory();
 
+// default city when loading page
+geoCodeApi("San Diego");
+
+// handles user input when search button is clicked
 searchButtonEl.on('click', function(event){
     if (searchInputEl.val() === "") return;
     geoCodeApi(searchInputEl.val());
 });
 
+// handles when user clicks a search history button
 searchHistoryContainerEl.on('click', function(event){
     var target = event.target;
 
@@ -65,6 +74,7 @@ searchHistoryContainerEl.on('click', function(event){
     }
 });
 
+// calls geocode api to return lat,lon given city name
 function geoCodeApi(city){
     var requestUrl = geoCodeBaseUrl + "&q=" + city;
     fetch(requestUrl)
@@ -87,6 +97,7 @@ function geoCodeApi(city){
         });
 }
 
+// returns weather object given a lat,lon
 function getWeatherApi(lat, lon) {
     var requestUrl = weatherBaseUrl + "&lat=" + lat + "&lon=" + lon
     fetch(requestUrl)
@@ -97,11 +108,13 @@ function getWeatherApi(lat, lon) {
         return response.json();
         })
         .then(function (data) {
+            console.log(data);
             var weatherSummary = grabRelevantData(data);
             renderWeather(weatherSummary);
         });
 }
 
+// sifts through weatherAPI to only grab needed data
 function grabRelevantData(data){
 
     weatherSummary.lat = data.lat;
@@ -120,11 +133,13 @@ function grabRelevantData(data){
     return weatherSummary;
 }
 
+// renders both current and forecasted weather
 function renderWeather(weatherSummary){
     renderCurrentWeather(weatherSummary.current);
     renderForecastWeather(weatherSummary.forecast);
 }
 
+// creates all current weather elements and renders to top of container
 function renderCurrentWeather(currentSummary){
     var containerEl = $("#current-weather");
     var headerEl = $(containerEl.children()[0]);
@@ -146,6 +161,7 @@ function renderCurrentWeather(currentSummary){
     headerEl.append(iconEl);
 }
 
+// creates and renders five cards to bottom of container
 function renderForecastWeather(forecastSummary){
     var forecastEl = $("#forecast-weather");
     var forecastCardContainerEl = $(forecastEl.children()[1]);
@@ -158,9 +174,10 @@ function renderForecastWeather(forecastSummary){
     }
 }
 
+// creates cards given forecasted weather data
 function createForecastCard(forecastIndex){
-    var card = $('<div>').addClass('col card m-2');
-    var cardBody = $('<div>').addClass('card-body');
+    var card = $('<div>').addClass('col card m-3 p-0');
+    var cardBody = $('<div>').addClass('card-body custom-bg');
 
     var cardTitle = $('<h5>').addClass('card-title');
     cardTitle.text(moment.unix(forecastIndex.unixTime).format("M/DD/YYYY"));
@@ -187,6 +204,8 @@ function createForecastCard(forecastIndex){
     return card;
 }
 
+// grabs search history from local storage and creates list of buttons
+// when user clicks a button, runs api call for that city
 function renderSearchHistory(){
     searchHistory.getHistory();
     searchHistoryContainerEl.empty();
@@ -199,10 +218,12 @@ function renderSearchHistory(){
     }
 }
 
+// concatenates url given icon code
 function getIconUrl(iconCode){
     return "http://openweathermap.org/img/wn/" + iconCode + "@2x.png";
 }
 
+// returns bootstrap background color based on uvi 
 function getUVIndexColor(uvi){
     if (uvi <= 2.5) return "success";
     if (uvi <= 5.5) return "warning"; 

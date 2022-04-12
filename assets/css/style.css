@@ -1,9 +1,24 @@
 
-/* div{
-    border: 1px solid black;
-} */
+.custom-header{
+    text-align: center; 
+    font-weight: bold;
+    color: white;
+    background-image: radial-gradient(circle, darkblue 50%, lightblue);
+}
 
 i{
+    margin-left: 1%;
+    margin-bottom: 1%;
     height: 50px;
     width: 50px;
+}
+
+.custom-bg{
+    background-color: lightblue;
+}
+
+.custom-container{
+    margin: 1px;
+    background-color: lightblue;
+    border-radius: 10px;
 }
