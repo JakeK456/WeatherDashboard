@@ -28,6 +28,7 @@ var searchHistory = {
         if (this.history.length > this.maxIndexes) this.history.pop();
 
         this.history.unshift(city);
+
         localStorage.setItem("history", JSON.stringify(this.history));
     }
 }
@@ -49,16 +50,10 @@ function weatherMoment(unixTime, tempF, windSpeedMPH, humidity, uvi, icon){
     this.icon = icon;
 }
 
-
-
-
-
-
-
-
 renderSearchHistory();
 
 searchButtonEl.on('click', function(event){
+    if (searchInputEl.val() === "") return;
     geoCodeApi(searchInputEl.val());
 });
 
@@ -80,6 +75,11 @@ function geoCodeApi(city){
         return response.json();
         })
         .then(function (data) {
+            if (data.length === 0){
+                searchInputEl.val("");
+                searchInputEl.attr("placeholder", "Enter a valid city.");
+                return;
+            } 
             weatherSummary.city = data[0].name;
             searchHistory.addToHistory(weatherSummary.city);
             renderSearchHistory();
@@ -136,10 +136,12 @@ function renderCurrentWeather(currentSummary){
 
     headerEl.text(weatherSummary.city + " " +  moment.unix(currentSummary.unixTime).format("M/DD/YYYY"));
     iconEl.css("content", 'url(' + getIconUrl(currentSummary.icon) + ')');
+    iconEl.addClass("align-middle");
     tempSpanEl.text(currentSummary.tempF + " " + String.fromCharCode(176) + "F");
     windSpanEl.text(currentSummary.windSpeedMPH + " MPH");
     humiditySpanEl.text(currentSummary.humidity + "%");
     uviSpanEl.text(currentSummary.uvi);
+    uviSpanEl.addClass("badge bg-" + getUVIndexColor(currentSummary.uvi));
 
     headerEl.append(iconEl);
 }
@@ -149,8 +151,6 @@ function renderForecastWeather(forecastSummary){
     var forecastCardContainerEl = $(forecastEl.children()[1]);
     
     forecastCardContainerEl.empty();
-
-    console.log(forecastSummary);
 
     for (var i = 0; i < forecastSummary.length; i++){
         var card = new createForecastCard(forecastSummary[i]);
@@ -167,7 +167,6 @@ function createForecastCard(forecastIndex){
     cardBody.append(cardTitle);
 
     var iconEl = $('<i>');
-    console.log(getIconUrl(forecastIndex.icon));
     iconEl.css("content", 'url(' + getIconUrl(forecastIndex.icon) + ')');
     cardBody.append(iconEl);
 
@@ -200,8 +199,12 @@ function renderSearchHistory(){
     }
 }
 
-
-
 function getIconUrl(iconCode){
     return "http://openweathermap.org/img/wn/" + iconCode + "@2x.png";
+}
+
+function getUVIndexColor(uvi){
+    if (uvi <= 2.5) return "success";
+    if (uvi <= 5.5) return "warning"; 
+    return "danger";
 }
