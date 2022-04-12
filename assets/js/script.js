@@ -108,7 +108,6 @@ function getWeatherApi(lat, lon) {
         return response.json();
         })
         .then(function (data) {
-            console.log(data);
             var weatherSummary = grabRelevantData(data);
             renderWeather(weatherSummary);
         });
