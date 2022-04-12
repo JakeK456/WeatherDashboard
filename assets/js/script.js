@@ -1,5 +1,5 @@
 var weatherBaseUrl = "https://api.openweathermap.org/data/2.5/onecall?&exclude=minutely,hourly,alerts&units=imperial&appid=423f62f077e216c8f64b4992f27ead8c"
-var geoCodeBaseUrl = "http://api.openweathermap.org/geo/1.0/direct?&appid=423f62f077e216c8f64b4992f27ead8c"
+var geoCodeBaseUrl = "https://api.openweathermap.org/geo/1.0/direct?&appid=423f62f077e216c8f64b4992f27ead8c"
 
 var searchButtonEl = $("#search-button");
 var searchInputEl = $("#search-input");
