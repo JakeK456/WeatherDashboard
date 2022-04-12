@@ -220,7 +220,7 @@ function renderSearchHistory(){
 
 // concatenates url given icon code
 function getIconUrl(iconCode){
-    return "http://openweathermap.org/img/wn/" + iconCode + "@2x.png";
+    return "https://openweathermap.org/img/wn/" + iconCode + "@2x.png";
 }
 
 // returns bootstrap background color based on uvi 
